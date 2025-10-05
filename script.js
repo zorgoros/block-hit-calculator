@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dailyEarningsSpan = document.getElementById('daily-earnings');
     const currentPriceSpan = document.getElementById('current-price');
     const dailyEarningsUsdSpan = document.getElementById('daily-earnings-usd');
+    const errorSpan = document.getElementById('error-message');
 
     const poolFeeInput = document.getElementById('pool-fee');
 
@@ -33,6 +34,17 @@ document.addEventListener('DOMContentLoaded', () => {
             { name: 'Zcash', symbol: 'ZEC' }
         ]
     };
+
+    const HASHRATE_MULTIPLIERS = {
+        'H/s': 1,
+        'kH/s': 1e3,
+        'MH/s': 1e6,
+        'GH/s': 1e9,
+        'TH/s': 1e12,
+        'PH/s': 1e15,
+        'EH/s': 1e18,
+    };
+    const DIFFICULTY_MULTIPLIER = 2 ** 32;
 
     let filteredCoins = popularCoins;
     let timeToFindInDays = 0;
@@ -95,7 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
         dailyEarningsSpan.textContent = '-';
         currentPriceSpan.textContent = '-';
         dailyEarningsUsdSpan.textContent = '-';
-        const errorSpan = document.getElementById('error-message');
         errorSpan.textContent = '';
 
 
@@ -109,16 +120,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('Please select a cryptocurrency and enter a valid hashrate.');
             }
 
-            let userHashrate = userHashrateInput;
-            if (hashrateUnit === 'H/s') userHashrate *= 1;
-            else if (hashrateUnit === 'kH/s') userHashrate *= 1e3;
-            else if (hashrateUnit === 'MH/s') userHashrate *= 1e6;
-            else if (hashrateUnit === 'GH/s') userHashrate *= 1e9;
-            else if (hashrateUnit === 'TH/s') userHashrate *= 1e12;
-            else if (hashrateUnit === 'PH/s') userHashrate *= 1e15;
-            else if (hashrateUnit === 'EH/s') userHashrate *= 1e18;
+            const userHashrate = userHashrateInput * (HASHRATE_MULTIPLIERS[hashrateUnit] || 1);
 
-            const poolFee = Math.min(100, Math.max(0, parseFloat(poolFeeInput.value || '0'))) / 100;
+            const poolFeePercentage = Math.min(100, Math.max(0, parseFloat(poolFeeInput.value || '0')));
+            const poolFee = poolFeePercentage / 100;
 
             const apiUrl = `https://api.minerstat.com/v2/coins?list=${selectedCrypto}`;
             const response = await fetch(apiUrl);
@@ -146,8 +151,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // 4. Perform calculations
-            const timeToFindInSeconds = (difficulty * 2 ** 32) / userHashrate;
-            const dailyEarnings = userHashrate * blockReward * 86400 / (difficulty * 2 ** 32) * (1 - poolFee);
+            const timeToFindInSeconds = (difficulty * DIFFICULTY_MULTIPLIER) / userHashrate;
+            const dailyEarnings = (userHashrate * blockReward * 86400) / (difficulty * DIFFICULTY_MULTIPLIER) * (1 - poolFee);
 
             // 5. Display results with smart formatting
             timeToFindSpan.textContent = formatTime(timeToFindInSeconds);
