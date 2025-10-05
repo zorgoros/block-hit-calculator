@@ -9,10 +9,15 @@
 </head>
 <body>
     <div class="container">
-        <h1>Block Hit Calculator</h1>
+        <div class="widget-head">
+            <!-- You can find a simple SVG icon online to place here -->
+            <h1>Block Hit Calculator</h1>
+        </div>
         <div class="widget-body">
             <div class="left-column">
-                <div class="form-group">
+                <!-- The form-groups are wrapped in a div to help with layout -->
+                <div>
+                    <div class="form-group">
                     <label for="crypto">Cryptocurrency:</label>
                     <div class="searchable-select">
                         <input type="text" id="crypto-search" placeholder="Search...">
@@ -20,8 +25,8 @@
                             <!-- Options will be populated from an API -->
                         </select>
                     </div>
-                </div>
-                <div class="form-group">
+                    </div>
+                    <div class="form-group">
                     <label for="hashrate">Your Hashrate:
                         <span class="tooltip">
                             <span class="tooltip-icon">?</span>
@@ -40,8 +45,8 @@
                             <option value="EH/s">EH/s</option>
                         </select>
                     </div>
-                </div>
-                <div class="form-group">
+                    </div>
+                    <div class="form-group">
                     <label for="pool-fee">Pool Fee (%):
                         <span class="tooltip">
                             <span class="tooltip-icon">?</span>
@@ -49,33 +54,38 @@
                         </span>
                     </label>
                     <input type="number" id="pool-fee" placeholder="Enter pool fee" value="1">
+                    </div>
                 </div>
                 <button id="calculate">Calculate</button>
             </div>
             <div class="right-column">
-                <div id="results">
+                <div id="results" aria-live="polite">
                     <h2>Results</h2>
-                    <p>Estimated time to find a block (Solo): 
-                        <span class="tooltip">
-                            <span class="tooltip-icon">?</span>
-                            <span class="tooltip-text">For SOLO MINING. This is a statistical estimate of how long it would take to find a block by yourself. Pool fee does not apply.</span>
-                        </span>
-                        <span id="time-to-find"></span>
-                    </p>
-                    <p>Estimated daily earnings (Pool): 
-                        <span class="tooltip">
-                            <span class="tooltip-icon">?</span>
-                            <span class="tooltip-text">For POOL MINING. This is your estimated daily reward when mining in a pool, after the pool fee is deducted.</span>
-                        </span>
-                        <span id="daily-earnings"></span>
-                    </p>
-                    <p>Current Price: <span id="current-price"></span></p>
-                    <p>Estimated Daily Earnings (USD): <span id="daily-earnings-usd"></span></p>
+                    <div class="kpi-main">
+                        <span id="time-to-find">-</span>
+                    </div>
+                    <div class="kpi">
+                        <div class="badge">
+                            <span>Pool:</span>
+                            <span id="daily-earnings">-</span>
+                        </div>
+                        <div class="badge">
+                            <span>Price:</span>
+                            <span id="current-price">-</span>
+                        </div>
+                        <div class="badge" id="daily-earnings-usd-badge">
+                            <span id="daily-earnings-usd">-</span>
+                        </div>
+                    </div>
                 </div>
                 <div id="error-container">
                     <span id="error-message" class="error"></span>
                 </div>
             </div>
+        </div>
+        <div class="widget-foot">
+            <span>Data by Minerstat</span>
+            <a id="embed-link" href="#" aria-label="Get embed code">Embed ▸</a>
         </div>
     </div>
     <script src="script.js"></script>

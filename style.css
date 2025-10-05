@@ -1,3 +1,9 @@
+/* CSS Variables for Theming */
+:root {
+    --bg: #2d3748; --bg-elev: #1f2937; --text: #e2e8f0; --muted: #a0aec0;
+    --accent: #63b3ed; --border: #4a5568; --badge-bg: #111827;
+}
+
 /* General Body Styles */
 body {
     font-family: 'VT323', monospace;
@@ -13,22 +19,30 @@ body {
 
 /* The Widget Container */
 .container {
-    background-color: #2d3748; /* Lighter Slate */
-    padding: 1.5rem;
-    border-radius: 8px;
-    border: 1px solid #4a5568; /* Subtler border */
+    background-color: var(--bg);
+    border-radius: 12px;
+    border: 1px solid var(--border);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Softer shadow */
     max-width: 800px; /* Widen for two columns */
     width: 100%;
+    overflow: hidden; /* For border-radius on children */
+    padding: 0;
+}
+
+/* Widget Header */
+.widget-head {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .75rem 1rem;
+    background: linear-gradient(0deg, #1f2937, #273347);
+    border-bottom: 1px solid var(--border);
 }
 
 /* Headings */
 h1, h2 {
-    text-align: center;
-    margin-bottom: 1rem;
-    color: #e2e8f0;
+    color: var(--text);
     text-transform: uppercase;
-    letter-spacing: 1px;
 }
 
 h1 {
@@ -38,7 +52,8 @@ h1 {
 /* --- New Widget Layout --- */
 .widget-body {
     display: flex;
-    gap: 2rem; /* Space between columns */
+    gap: 1.25rem; /* Space between columns */
+    padding: 1rem;
 }
 
 .left-column, .right-column {
@@ -53,7 +68,7 @@ h1 {
 
 .right-column #results {
     flex-grow: 1; /* Allows results to fill vertical space */
-    border-left: 1px solid #4a5568; /* Separator line */
+    border-left: 1px solid var(--border); /* Separator line */
     padding-left: 2rem;
     margin-top: 0;
     border-top: 0;
@@ -63,6 +78,7 @@ h1 {
 .right-column h2 {
     text-align: left;
     margin-top: 0;
+    display: none; /* Results feel inline in widgets */
 }
 
 /* Form Elements */
@@ -81,10 +97,10 @@ input,
 select {
     width: 100%;
     padding: 0.6rem;
-    border: 1px solid #4a5568;
+    border: 1px solid var(--border);
     border-radius: 4px;
-    background-color: #1a202c;
-    color: #e2e8f0;
+    background-color: var(--bg-elev);
+    color: var(--text);
     font-family: 'VT323', monospace;
     font-size: 18px;
     box-sizing: border-box;
@@ -97,8 +113,8 @@ input::placeholder {
 input:focus,
 select:focus {
     outline: none;
-    border-color: #63b3ed;
-    box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.2);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent, 0.2);
 }
 
 .hashrate-input-group {
@@ -121,8 +137,8 @@ select:focus {
 button {
     width: 100%;
     padding: 0.7rem;
-    background-color: #63b3ed;
-    color: #1a202c;
+    background-color: var(--accent);
+    color: var(--bg-elev);
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -139,15 +155,44 @@ button:hover {
 }
 
 button:disabled {
-    background-color: #4a5568;
-    color: #a0aec0;
+    background-color: var(--border);
+    color: var(--muted);
     cursor: not-allowed;
 }
 
-/* Results Section (Original styles modified by column layout) */
-#results p {
-    margin-bottom: 0.8rem;
-    color: #e2e8f0;
+/* Results Section (KPIs and Badges) */
+.kpi-main {
+    font-size: 2.2rem; /* Larger primary result */
+    line-height: 1.1;
+    font-weight: 700;
+    color: var(--text);
+    margin: .25rem 0 1rem;
+    text-align: center;
+}
+
+.kpi {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin: .25rem 0 1rem;
+    justify-content: center;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    background: var(--badge-bg);
+    border: 1px solid var(--border);
+    padding: .35rem .55rem;
+    border-radius: 999px;
+    font-size: .9rem;
+    color: var(--muted);
+}
+
+.badge span:last-child {
+    color: var(--text);
+    font-weight: bold;
 }
 
 /* Tooltip Styling */
@@ -164,8 +209,8 @@ button:disabled {
     line-height: 1.1rem;
     text-align: center;
     border-radius: 50%;
-    background-color: #63b3ed;
-    color: #1a202c;
+    background-color: var(--accent);
+    color: var(--bg-elev);
     font-weight: bold;
     cursor: pointer;
 }
@@ -173,8 +218,8 @@ button:disabled {
 .tooltip .tooltip-text {
     visibility: hidden;
     width: 220px;
-    background-color: #1a202c;
-    color: #e2e8f0;
+    background-color: var(--bg-elev);
+    color: var(--text);
     text-align: center;
     border-radius: 6px;
     padding: 0.75rem;
@@ -185,7 +230,7 @@ button:disabled {
     margin-left: -110px;
     opacity: 0;
     transition: opacity 0.3s;
-    border: 1px solid #4a5568;
+    border: 1px solid var(--border);
     font-size: 14px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
@@ -205,4 +250,21 @@ button:disabled {
 .error {
     color: #f56565;
     font-weight: bold;
+}
+
+/* Widget Footer */
+.widget-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .6rem 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: .85rem;
+    background-color: var(--bg-elev);
+}
+
+.widget-foot a {
+    color: var(--accent);
+    text-decoration: none;
 }

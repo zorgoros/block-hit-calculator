@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dailyEarningsSpan = document.getElementById('daily-earnings');
     const currentPriceSpan = document.getElementById('current-price');
     const dailyEarningsUsdSpan = document.getElementById('daily-earnings-usd');
-    const errorSpan = document.getElementById('error-message');
+    const errorSpan = document.getElementById('error-message'); // This is fine, but we'll also use it
 
     const poolFeeInput = document.getElementById('pool-fee');
 
@@ -83,6 +83,23 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${years.toFixed(2)} years`;
     }
 
+    function prefillFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const crypto = params.get('c');
+        const hashrate = params.get('h');
+        const unit = params.get('u');
+        const fee = params.get('f');
+
+        if (crypto) cryptoSelect.value = crypto;
+        if (hashrate) hashrateInput.value = hashrate;
+        if (unit) hashrateUnitSelect.value = unit;
+        if (fee) poolFeeInput.value = fee;
+
+        if (crypto && hashrate && unit) {
+            calculateButton.click();
+        }
+    }
+
     populateDropdown(popularCoins);
 
     cryptoSearch.addEventListener('input', () => {
@@ -98,6 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         populateDropdown(filteredCoins);
     });
+
+    prefillFromUrl(); // Run on page load
 
     calculateButton.addEventListener('click', async () => {
         // 1. Set loading state and clear previous results
@@ -156,10 +175,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 5. Display results with smart formatting
             timeToFindSpan.textContent = formatTime(timeToFindInSeconds);
-            dailyEarningsSpan.textContent = `${dailyEarnings.toFixed(8)} ${selectedCrypto}`;
-            currentPriceSpan.textContent = `${price.toFixed(2)}`;
-            dailyEarningsUsdSpan.textContent = `${(dailyEarnings * price).toFixed(2)}`;
+            dailyEarningsSpan.textContent = `${dailyEarnings.toFixed(6)} ${selectedCrypto}`;
+            currentPriceSpan.textContent = `$${price.toFixed(2)}`;
+            dailyEarningsUsdSpan.textContent = `$${(dailyEarnings * price).toFixed(2)}/day`;
 
+            // 6. Update URL with current parameters
+            const params = new URLSearchParams({
+                c: selectedCrypto,
+                h: userHashrateInput,
+                u: hashrateUnit,
+                f: poolFeePercentage
+            });
+            // Use replaceState to avoid polluting browser history
+            history.replaceState(null, '', `?${params.toString()}`);
+
+            
         } catch (error) {
             errorSpan.textContent = error.message;
             console.error('Error during calculation:', error);
