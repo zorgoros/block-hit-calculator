@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dailyEarningsSpan = document.getElementById('daily-earnings');
     const currentPriceSpan = document.getElementById('current-price');
     const dailyEarningsUsdSpan = document.getElementById('daily-earnings-usd');
+    const embedLink = document.getElementById('embed-link');
     const errorSpan = document.getElementById('error-message'); // This is fine, but we'll also use it
 
     const poolFeeInput = document.getElementById('pool-fee');
@@ -47,7 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const DIFFICULTY_MULTIPLIER = 2 ** 32;
 
     let filteredCoins = popularCoins;
-    let timeToFindInDays = 0;
 
     function populateDropdown(coins) {
         const selectedValue = cryptoSelect.value;
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function formatTime(seconds) {
-        if (isNaN(seconds) || seconds === 0) return 'Never';
+        if (!Number.isFinite(seconds) || seconds <= 0) return 'Never';
         if (seconds < 60) return `${seconds.toFixed(1)} seconds`;
         const minutes = seconds / 60;
         if (minutes < 60) return `${minutes.toFixed(1)} minutes`;
@@ -114,18 +114,45 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         populateDropdown(filteredCoins);
+        // Auto-select first result if current selection is no longer valid
+        if (!cryptoSelect.value && cryptoSelect.options.length) {
+            cryptoSelect.value = cryptoSelect.options[0].value;
+        }
     });
 
-    prefillFromUrl(); // Run on page load
+    // Add listeners for preset hashrate chips
+    document.querySelectorAll('.preset-chips button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent form submission if it were in a form
+            hashrateInput.value = button.dataset.hash;
+            hashrateUnitSelect.value = button.dataset.unit;
+        });
+    });
+
+    // Add listener for the embed link
+    embedLink.addEventListener('click', e => {
+        e.preventDefault();
+        const embedCode = `<iframe src="${location.href}" width="360" height="420" style="border:0; border-radius:12px; overflow:hidden;" title="Block Hit Calculator"></iframe>`;
+        navigator.clipboard.writeText(embedCode).then(() => {
+            const originalText = embedLink.textContent;
+            embedLink.textContent = 'Copied!';
+            setTimeout(() => {
+                embedLink.textContent = originalText;
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy embed code: ', err);
+            alert('Failed to copy embed code.');
+        });
+    });
 
     calculateButton.addEventListener('click', async () => {
         // 1. Set loading state and clear previous results
         calculateButton.disabled = true;
         calculateButton.textContent = 'Calculating...';
-        timeToFindSpan.textContent = '-';
-        dailyEarningsSpan.textContent = '-';
-        currentPriceSpan.textContent = '-';
-        dailyEarningsUsdSpan.textContent = '-';
+        document.querySelectorAll('#time-to-find, #daily-earnings, #current-price, #daily-earnings-usd').forEach(el => {
+            el.classList.add('loading-shimmer');
+            el.textContent = '...'; // Placeholder text for shimmer
+        });
         errorSpan.textContent = '';
 
 
@@ -163,21 +190,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const difficulty = parseFloat(coinData.difficulty);
             const blockReward = parseFloat(coinData.reward_block);
-            const price = parseFloat(coinData.price);
+            let price = parseFloat(coinData.price);
 
-            if (isNaN(difficulty) || isNaN(blockReward) || isNaN(price)) {
+            if (!Number.isFinite(difficulty) || !Number.isFinite(blockReward)) {
                 throw new Error(`Incomplete data received for ${selectedCrypto}.`);
             }
+            const hasPrice = Number.isFinite(price);
 
             // 4. Perform calculations
             const timeToFindInSeconds = (difficulty * DIFFICULTY_MULTIPLIER) / userHashrate;
             const dailyEarnings = (userHashrate * blockReward * 86400) / (difficulty * DIFFICULTY_MULTIPLIER) * (1 - poolFee);
 
+            // Use Intl.NumberFormat for better currency formatting
+            const fmtUSD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+
             // 5. Display results with smart formatting
             timeToFindSpan.textContent = formatTime(timeToFindInSeconds);
             dailyEarningsSpan.textContent = `${dailyEarnings.toFixed(6)} ${selectedCrypto}`;
-            currentPriceSpan.textContent = `$${price.toFixed(2)}`;
-            dailyEarningsUsdSpan.textContent = `$${(dailyEarnings * price).toFixed(2)}/day`;
+            currentPriceSpan.textContent = hasPrice ? fmtUSD.format(price) : '—';
+            dailyEarningsUsdSpan.textContent = hasPrice ? `${fmtUSD.format(dailyEarnings * price)}/day` : '—';
+
 
             // 6. Update URL with current parameters
             const params = new URLSearchParams({
@@ -189,14 +221,26 @@ document.addEventListener('DOMContentLoaded', () => {
             // Use replaceState to avoid polluting browser history
             history.replaceState(null, '', `?${params.toString()}`);
 
-            
         } catch (error) {
             errorSpan.textContent = error.message;
             console.error('Error during calculation:', error);
+            // On error, reset the result fields to their default state
+            document.querySelectorAll('#time-to-find, #daily-earnings, #current-price, #daily-earnings-usd').forEach(el => {
+                el.textContent = '-';
+            });
         } finally {
-            // 6. Reset loading state
+            // 7. Reset loading state
             calculateButton.disabled = false;
             calculateButton.textContent = 'Calculate';
+            
+            // Always remove the shimmer effect, whether it succeeded or failed
+            document.querySelectorAll('.loading-shimmer').forEach(el => {
+                el.classList.remove('loading-shimmer');
+            });
         }
     });
+
+    // Run prefill after the event listener is attached to avoid race conditions
+    prefillFromUrl();
+
 });

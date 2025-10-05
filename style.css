@@ -4,6 +4,17 @@
     --accent: #63b3ed; --border: #4a5568; --badge-bg: #111827;
 }
 
+/* Loading Shimmer Animation */
+.loading-shimmer {
+    background: linear-gradient(90deg, #2a3240 25%, #364155 50%, #2a3240 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    color: transparent !important; /* Hide text during shimmer */
+}
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
 /* General Body Styles */
 body {
     font-family: 'VT323', monospace;
@@ -63,6 +74,10 @@ h1 {
 }
 
 .left-column {
+    /* Visual Grouping for the control panel */
+    background-color: var(--bg-elev);
+    border-radius: 8px;
+    padding: .75rem;
     justify-content: space-between; /* Pushes button to the bottom */
 }
 
@@ -131,6 +146,24 @@ select:focus {
     border-bottom-left-radius: 0;
     border-left: 0;
     width: auto;
+}
+
+/* Preset Chips */
+.preset-chips {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.preset-chips button {
+    flex: 1;
+    padding: 0.3rem;
+    font-size: 14px;
+    background-color: var(--border);
+    color: var(--text);
+    margin-top: 0;
+    letter-spacing: 0;
+    text-transform: none;
 }
 
 /* Button Styling */
@@ -267,4 +300,20 @@ button:disabled {
 .widget-foot a {
     color: var(--accent);
     text-decoration: none;
+}
+
+/* Responsive Layout for smaller screens */
+@media (max-width: 640px) {
+    .widget-body {
+        flex-direction: column;
+    }
+    .left-column {
+        order: 2; /* Inputs appear after results */
+    }
+    .right-column {
+        order: 1; /* Results appear first */
+        border-left: 0;
+        border-bottom: 1px solid var(--border);
+        padding: 0 0 1rem;
+    }
 }
