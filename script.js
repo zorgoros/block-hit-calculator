@@ -1,0 +1,167 @@
+document.addEventListener('DOMContentLoaded', () => {
+    const cryptoSelect = document.getElementById('crypto');
+    const cryptoSearch = document.getElementById('crypto-search');
+    const hashrateInput = document.getElementById('hashrate');
+    const hashrateUnitSelect = document.getElementById('hashrate-unit');
+    const calculateButton = document.getElementById('calculate');
+    const timeToFindSpan = document.getElementById('time-to-find');
+    const dailyEarningsSpan = document.getElementById('daily-earnings');
+    const currentPriceSpan = document.getElementById('current-price');
+    const dailyEarningsUsdSpan = document.getElementById('daily-earnings-usd');
+
+    const poolFeeInput = document.getElementById('pool-fee');
+
+    const popularCoins = {
+        'SHA-256': [
+            { name: 'Bitcoin', symbol: 'BTC' },
+            { name: 'Bitcoin Cash', symbol: 'BCH' },
+        ],
+        'Scrypt': [
+            { name: 'Litecoin', symbol: 'LTC' },
+            { name: 'Dogecoin', symbol: 'DOGE' },
+        ],
+        'Ethash': [
+            { name: 'Ethereum Classic', symbol: 'ETC' },
+        ],
+        'X11': [
+            { name: 'Dash', symbol: 'DASH' },
+        ],
+        'CryptoNight': [
+            { name: 'Monero', symbol: 'XMR' },
+        ],
+        'Equihash': [
+            { name: 'Zcash', symbol: 'ZEC' }
+        ]
+    };
+
+    let filteredCoins = popularCoins;
+    let timeToFindInDays = 0;
+
+    function populateDropdown(coins) {
+        const selectedValue = cryptoSelect.value;
+        cryptoSelect.innerHTML = '';
+        for (const algorithm in coins) {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = algorithm;
+            coins[algorithm].forEach(coin => {
+                const option = document.createElement('option');
+                option.value = coin.symbol;
+                option.textContent = coin.name;
+                optgroup.appendChild(option);
+            });
+            cryptoSelect.appendChild(optgroup);
+        }
+        if (Array.from(cryptoSelect.options).some(opt => opt.value === selectedValue)) {
+            cryptoSelect.value = selectedValue;
+        }
+    }
+
+    function formatTime(seconds) {
+        if (isNaN(seconds) || seconds === 0) return 'Never';
+        if (seconds < 60) return `${seconds.toFixed(1)} seconds`;
+        const minutes = seconds / 60;
+        if (minutes < 60) return `${minutes.toFixed(1)} minutes`;
+        const hours = minutes / 60;
+        if (hours < 24) return `${hours.toFixed(1)} hours`;
+        const days = hours / 24;
+        if (days < 30.437) return `${days.toFixed(1)} days`;
+        const months = days / 30.437;
+        if (months < 12) return `${months.toFixed(1)} months`;
+        const years = days / 365.25;
+        return `${years.toFixed(2)} years`;
+    }
+
+    populateDropdown(popularCoins);
+
+    cryptoSearch.addEventListener('input', () => {
+        const searchTerm = cryptoSearch.value.toLowerCase();
+        filteredCoins = {};
+        for (const algorithm in popularCoins) {
+            const matchingCoins = popularCoins[algorithm].filter(coin =>
+                coin.name.toLowerCase().includes(searchTerm) || coin.symbol.toLowerCase().includes(searchTerm)
+            );
+            if (matchingCoins.length > 0) {
+                filteredCoins[algorithm] = matchingCoins;
+            }
+        }
+        populateDropdown(filteredCoins);
+    });
+
+    calculateButton.addEventListener('click', async () => {
+        // 1. Set loading state and clear previous results
+        calculateButton.disabled = true;
+        calculateButton.textContent = 'Calculating...';
+        timeToFindSpan.textContent = '-';
+        dailyEarningsSpan.textContent = '-';
+        currentPriceSpan.textContent = '-';
+        dailyEarningsUsdSpan.textContent = '-';
+        const errorSpan = document.getElementById('error-message');
+        errorSpan.textContent = '';
+
+
+        try {
+            const selectedCrypto = cryptoSelect.value;
+            const userHashrateInput = parseFloat(hashrateInput.value);
+            const hashrateUnit = hashrateUnitSelect.value;
+
+            // 2. Validate inputs
+            if (!selectedCrypto || isNaN(userHashrateInput) || userHashrateInput <= 0) {
+                throw new Error('Please select a cryptocurrency and enter a valid hashrate.');
+            }
+
+            let userHashrate = userHashrateInput;
+            if (hashrateUnit === 'H/s') userHashrate *= 1;
+            else if (hashrateUnit === 'kH/s') userHashrate *= 1e3;
+            else if (hashrateUnit === 'MH/s') userHashrate *= 1e6;
+            else if (hashrateUnit === 'GH/s') userHashrate *= 1e9;
+            else if (hashrateUnit === 'TH/s') userHashrate *= 1e12;
+            else if (hashrateUnit === 'PH/s') userHashrate *= 1e15;
+            else if (hashrateUnit === 'EH/s') userHashrate *= 1e18;
+
+            const poolFee = Math.min(100, Math.max(0, parseFloat(poolFeeInput.value || '0'))) / 100;
+
+            const apiUrl = `https://api.minerstat.com/v2/coins?list=${selectedCrypto}`;
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                throw new Error(`Network error: ${response.statusText}`);
+            }
+            const data = await response.json();
+
+            const coinData = data[0];
+            if (!coinData) {
+                throw new Error(`Data for ${selectedCrypto} is not available.`);
+            }
+
+            // 3. Check if mineable
+            if (coinData.is_mineable === false) {
+                throw new Error(`${coinData.name} (${coinData.coin}) is not mineable.`);
+            }
+
+            const difficulty = parseFloat(coinData.difficulty);
+            const blockReward = parseFloat(coinData.reward_block);
+            const price = parseFloat(coinData.price);
+
+            if (isNaN(difficulty) || isNaN(blockReward) || isNaN(price)) {
+                throw new Error(`Incomplete data received for ${selectedCrypto}.`);
+            }
+
+            // 4. Perform calculations
+            const timeToFindInSeconds = (difficulty * 2 ** 32) / userHashrate;
+            const dailyEarnings = userHashrate * blockReward * 86400 / (difficulty * 2 ** 32) * (1 - poolFee);
+
+            // 5. Display results with smart formatting
+            timeToFindSpan.textContent = formatTime(timeToFindInSeconds);
+            dailyEarningsSpan.textContent = `${dailyEarnings.toFixed(8)} ${selectedCrypto}`;
+            currentPriceSpan.textContent = `${price.toFixed(2)}`;
+            dailyEarningsUsdSpan.textContent = `${(dailyEarnings * price).toFixed(2)}`;
+
+        } catch (error) {
+            errorSpan.textContent = error.message;
+            console.error('Error during calculation:', error);
+        } finally {
+            // 6. Reset loading state
+            calculateButton.disabled = false;
+            calculateButton.textContent = 'Calculate';
+        }
+    });
+});

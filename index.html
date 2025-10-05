@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Hit Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Block Hit Calculator</h1>
+        <div class="widget-body">
+            <div class="left-column">
+                <div class="form-group">
+                    <label for="crypto">Cryptocurrency:</label>
+                    <div class="searchable-select">
+                        <input type="text" id="crypto-search" placeholder="Search...">
+                        <select id="crypto">
+                            <!-- Options will be populated from an API -->
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="hashrate">Your Hashrate:
+                        <span class="tooltip">
+                            <span class="tooltip-icon">?</span>
+                            <span class="tooltip-text">This is the speed at which your mining hardware can perform hashing operations. It's measured in MH/s (Mega-hashes per second), GH/s (Giga-hashes per second), or TH/s (Tera-hashes per second).</span>
+                        </span>
+                    </label>
+                    <div class="hashrate-input-group">
+                        <input type="number" id="hashrate" placeholder="Enter your hashrate">
+                        <select id="hashrate-unit">
+                            <option value="H/s">H/s</option>
+                            <option value="kH/s">kH/s</option>
+                            <option value="MH/s" selected>MH/s</option>
+                            <option value="GH/s">GH/s</option>
+                            <option value="TH/s">TH/s</option>
+                            <option value="PH/s">PH/s</option>
+                            <option value="EH/s">EH/s</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="pool-fee">Pool Fee (%):
+                        <span class="tooltip">
+                            <span class="tooltip-icon">?</span>
+                            <span class="tooltip-text">For pool mining. This fee is deducted from your estimated daily earnings. It does not affect the solo mining time estimate.</span>
+                        </span>
+                    </label>
+                    <input type="number" id="pool-fee" placeholder="Enter pool fee" value="1">
+                </div>
+                <button id="calculate">Calculate</button>
+            </div>
+            <div class="right-column">
+                <div id="results">
+                    <h2>Results</h2>
+                    <p>Estimated time to find a block (Solo): 
+                        <span class="tooltip">
+                            <span class="tooltip-icon">?</span>
+                            <span class="tooltip-text">For SOLO MINING. This is a statistical estimate of how long it would take to find a block by yourself. Pool fee does not apply.</span>
+                        </span>
+                        <span id="time-to-find"></span>
+                    </p>
+                    <p>Estimated daily earnings (Pool): 
+                        <span class="tooltip">
+                            <span class="tooltip-icon">?</span>
+                            <span class="tooltip-text">For POOL MINING. This is your estimated daily reward when mining in a pool, after the pool fee is deducted.</span>
+                        </span>
+                        <span id="daily-earnings"></span>
+                    </p>
+                    <p>Current Price: <span id="current-price"></span></p>
+                    <p>Estimated Daily Earnings (USD): <span id="daily-earnings-usd"></span></p>
+                </div>
+                <div id="error-container">
+                    <span id="error-message" class="error"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
